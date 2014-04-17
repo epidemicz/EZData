@@ -12,7 +12,7 @@ namespace EZData
     /// <summary>
     /// Handles the database connection and interaction.
     /// </summary>
-    public class Database
+    public static class Database
     {
         #region "Public Properties"
         public static OracleConnection Connection { get; set; }
@@ -80,7 +80,7 @@ namespace EZData
 
                             // set updatable flag so we know this instance should 
                             // be updated instead of inserted when saving
-                            tmp.Updatable = true;
+                            tmp.Updateable = true;
 
                             // determines if we have cached the columns yet
                             bool columnsAreCached = propertiesByColumn.Count > 0;
@@ -125,7 +125,12 @@ namespace EZData
                                 if (dr[i] is DBNull) continue;
 
                                 if (prop == null)
-                                    throw new Exception("The property " + propertyName + " was not found in class " + tableType.Name + ".");
+                                {
+                                    // query returned a column that was not in the model
+                                    Console.WriteLine("The query returned a column (" + columnNameDb +
+                                                      ") that was not present in the model (" + tableType.Name + ")");
+                                    continue;
+                                }
 
                                 // setting the property value (the magic happens here!)
                                 prop.SetValue(tmp, Convert.ChangeType(dr[i], prop.PropertyType), null);
@@ -144,13 +149,24 @@ namespace EZData
 
             return result;
         }
+
+        /// <summary>
+        /// Query data from the database.
+        /// </summary>
+        /// <typeparam name="T">Must be a class derived from DBTable</typeparam>
+        /// <returns>A List (of T) of the query results</returns>
+        public static List<T> Query<T>() where T : DBTable
+        {
+            return Query<T>("select * from " + typeof(T).Name.ToSnakeCase());
+        }
         #endregion
     }
 
     /// <summary>
     /// Base class for a database table model.  Generates sql and does fancy things.
     /// </summary>
-    public class DBTable
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public abstract class DBTable
     {
 
         #region "Private Fields"
@@ -158,7 +174,7 @@ namespace EZData
         #endregion
 
         #region "Protected Internal Fields"
-        protected internal bool Updatable = false;
+        protected internal bool Updateable = false;
 
         protected internal int Max;
         protected internal int Count;
@@ -315,7 +331,7 @@ namespace EZData
                     var key = properties[i].Name.ToSnakeCase();
 
                     object initialValue;
-                    InitialValuesByColumn.TryGetValue(key, out initialValue);                    
+                    InitialValuesByColumn.TryGetValue(key, out initialValue);
                     //initialValue = InitialValuesByColum[properties[i].Name.ToSnakeCase()];
 
                     // this property's value
@@ -388,7 +404,7 @@ namespace EZData
         public int Save()
         {
             // determine whether we need and update or insert..
-            string statement = Updatable ? GenerateUpdateStatement() : GenerateInsertStatement();
+            string statement = Updateable ? GenerateUpdateStatement() : GenerateInsertStatement();
 
             // Rows affected.
             int rows = 0;
@@ -418,7 +434,7 @@ namespace EZData
             int rows = 0;
 
             // Because you can't delete something that doesn't exist yet.
-            if (Updatable)
+            if (Updateable)
             {
                 try
                 {
