@@ -1,7 +1,7 @@
 EZData
 ======
 
-A very simple object relational mapping library, built on top of devart's [dotConnect for Oracle]("C:\Program Files\Windows NT\Accessories\wordpad.exe").  Oracle only for now, looking to add support for others.
+A very simple object relational mapping library, built on top of devart's [dotConnect for Oracle](http://www.devart.com/dotconnect/oracle/).  Oracle only for now, looking to add support for others.
 
 
 ## Examples
