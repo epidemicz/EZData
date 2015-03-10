@@ -3,12 +3,13 @@ using System.Data.OleDb;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using Devart.Data.Oracle;
 
 namespace EZData.ModelGenerator
 {
     class Program
     {        
-        static OleDbConnection cn;
+        static OracleConnection cn;
 
         static void Main(string[] args)
         {
@@ -31,9 +32,9 @@ namespace EZData.ModelGenerator
                 Console.Write("DB Pass: "); pass = Console.ReadLine();
                 Console.Write("Database: "); db = Console.ReadLine();
 
-                string connectionString = "Provider=msdaora;Data Source=" + db + ";User Id=" + user + ";Password=" + pass + ";";
+                string connectionString = "Data Source=" + db + ";User Id=" + user + ";Password=" + pass + ";";
 
-                cn = new OleDbConnection(connectionString);
+                cn = new OracleConnection(connectionString);
                 cn.Open();
 
                 Generate();
@@ -63,9 +64,9 @@ namespace EZData.ModelGenerator
                 try
                 {
                     // attempt to locate this table
-                    using (OleDbCommand cmd = new OleDbCommand("select * from " + input, cn))
+                    using (var cmd = new OracleCommand("select * from " + input, cn))
                     {
-                        using (OleDbDataReader dr = cmd.ExecuteReader(System.Data.CommandBehavior.KeyInfo))
+                        using (var dr = cmd.ExecuteReader(System.Data.CommandBehavior.KeyInfo))
                         {
 
                             // getting schema table to be able to find primary keys
